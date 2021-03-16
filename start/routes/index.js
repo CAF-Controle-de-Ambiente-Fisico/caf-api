@@ -22,3 +22,4 @@ Route.get('/', () => {
 
 
 require("./User")
+require("./Auth")
