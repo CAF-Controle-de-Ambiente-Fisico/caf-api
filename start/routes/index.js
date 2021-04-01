@@ -21,5 +21,6 @@ Route.get('/', () => {
 })
 
 
-require("./User")
 require("./Auth")
+require("./Access")
+require("./Employee")

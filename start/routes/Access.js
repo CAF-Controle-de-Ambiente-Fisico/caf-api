@@ -2,7 +2,7 @@
 const Route = use('Route')
 
 Route.group(() => {
-    Route.resource('/user', "UserController").apiOnly() 
+    Route.post('/checkin', "AccessController.checkin") 
   })
   .prefix("v1")
-  .namespace("User")  
+  .namespace("Access")  

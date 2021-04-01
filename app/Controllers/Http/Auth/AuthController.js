@@ -20,7 +20,8 @@ class AuthController {
 
         } catch (err) {
             return response.status(404).json({
-                message: "error during login"
+                message: "error during login",
+                error: err.code
             })
         }
     }

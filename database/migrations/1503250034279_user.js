@@ -10,7 +10,11 @@ class UserSchema extends Schema {
       table.uuid('id').primary().defaultTo(this.db.raw("uuid_generate_v4()"))
       table.string('username', 80).notNullable()
       table.string('email', 254).notNullable().unique()
-      table.string('password', 60).notNullable()
+      table.string('password', 60)
+      table.string('cpf', 11).unique() 
+      table.text('photo') 
+      table.string('registration',30).unique()
+      table.timestamp('deleted_at')
       table.timestamps()
     })
   }
