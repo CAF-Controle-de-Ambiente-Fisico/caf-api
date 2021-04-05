@@ -10,7 +10,7 @@ class AccessController {
     async initiateCheckin({request, response, auth}) {        
         const { email } = request.all();
         
-        if (!auth.getUser()) {
+        if (!await auth.getUser()) {
             return response.status(400).json({
                 message: "user not logged in"
             })
@@ -19,6 +19,12 @@ class AccessController {
         try {
 
             const user = await User.findBy("email", email);
+
+            if (!user) {
+                return response.status(404).json({
+                    message: "user not found"
+                })
+            } 
             
             const access = await Access.query()
             .where("user_id", user.id)
@@ -47,9 +53,8 @@ class AccessController {
             });
             
             const userData = {
-                id: user.id, 
                 username: user.username, 
-                email: user.email 
+                photo: user.photo 
             }
 
             return response.status(200).json({userData});
@@ -81,10 +86,10 @@ class AccessController {
             const access = await Access.query()
             .where("user_id", user.id)
             .where("code", code)
-            .where("is_active", true)
+            .where("is_active", false)
             .first()
 
-            if (!access) {
+            if (access) {
                 return response.status(400).json({
                     message: "user has no active checkin"
                 })
@@ -116,6 +121,69 @@ class AccessController {
             })
         }
     }
-}
+    
+    async initiateCheckout({response, request}) {
+        const { email } = request.all(); 
 
-module.exports = AccessController
+        if (!await auth.getUser()) {
+            return response.status(400).json({
+                message: "user not logged in"
+            })
+        }
+
+        try {
+
+            const user = await User.findBy("email", email);
+
+            if (!user) {
+                return response.status(404).json({
+                    message: "user not found"
+                })
+            } 
+            
+            const access = await Access.query()
+            .where("user_id", user.id)
+            .where("is_active", true)
+            .whereNotNull("checkin")
+            .first()
+
+            if (!access) {
+                return response.status(404).json({
+                    message: "you need to have a checkin active to make a checkout!"
+                })
+            }
+
+            const userData = {
+                username: user.username, 
+                photo: user.photo 
+            }
+
+            return response.status(200).json({ userData })
+
+        } catch (err) {
+            return response.status(400).json({
+                message: "error initiating checkout"
+            })
+        }
+    }
+    
+    async checkout({response, request}) {
+
+        const { code } = request.all(); 
+
+        if (!code) {
+            return response.status(400).json({
+                message: "access code is required"
+            })
+        }
+
+        try { 
+
+        } catch (err) {
+            
+        }
+
+    }
+
+}
+    module.exports = AccessController
