@@ -4,6 +4,7 @@ const Hash = use("App/Models/Hash");
 const sendEmail = use("./../../../helpers/sendEmail");
 const Database = use("Database");
 const User = use("App/Models/User");
+const Access = use("App/Models/Access");
 
 class EmployeeController {
   async store({ request, response }) {
@@ -24,7 +25,7 @@ class EmployeeController {
 
       const confirmation_token = Math.random().toString(36).slice(5);
 
-      const hash = await Hash.create(
+      await Hash.create(
         {
           user_id: user.id,
           confirmation_token,
@@ -120,8 +121,10 @@ class EmployeeController {
   }
 
   async passwordConfirmation({ request, response }) {
-    const { password, confirm_password } = request.all();
-    const { token } = request.get();
+    const { password, confirm_password, token } = request.all();
+
+    const trx = await Database.beginTransaction()
+
     try {
       if (password != confirm_password) {
         return response.status(400).json({
@@ -133,21 +136,23 @@ class EmployeeController {
         .where("confirmation_token", token)
         .first();
 
-      console.log("HASH", hash, hash.user_id);
-
       const user = await User.findBy("id", hash.user_id);
 
       user.password = password;
 
-      await user.save();
+      await user.save(trx);
 
-      await hash.delete();
+      await hash.delete(trx);
+
+      trx.commit()
 
       return response.status(200).json({
         message: "password confirmed",
       });
     } catch (err) {
       console.log(err);
+
+      trx.rollback()
 
       return response.status(200).json({
         message: "error confirmating password",
