@@ -1,7 +1,6 @@
 'use strict'
 
     const Access = use("App/Models/Access");
-    const moment = use("moment");
     const sendEmail = use("./../../../helpers/sendEmail");
     const User = use("App/Models/User");
     
@@ -27,7 +26,7 @@ class AccessController {
 
             if (access) {
                 return response.status(400).json({
-                    message: "user already have an active access"
+                    message: "user already have an active access, please checkout"
                 })
             }
     
@@ -158,6 +157,8 @@ class AccessController {
     async checkout({response, request}) {
 
         const { code } = request.all(); 
+        
+        try {
 
         if (!code) {
             return response.status(400).json({
@@ -165,9 +166,23 @@ class AccessController {
             })
         }
 
-        try { 
+        const access = Access.merge({
+            checkout: new Date(),
+            is_active: false 
+        })
+
+        await access.save()
+
+        return response.status(200).json({
+            message: "checkout done"
+        })
+
 
         } catch (err) {
+
+            return response.status(400).json({
+                message: "checkout can't be done"
+            })
             
         }
 

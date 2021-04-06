@@ -4,7 +4,7 @@ const Hash = use("App/Models/Hash");
 const sendEmail = use("./../../../helpers/sendEmail");
 const Database = use("Database");
 const User = use("App/Models/User");
-const Access = use("App/Models/Access");
+const Employee = use("App/Models/Employee")
 
 class EmployeeController {
   async store({ request, response }) {
@@ -13,15 +13,16 @@ class EmployeeController {
     const trx = await Database.beginTransaction();
 
     try {
-      const user = await User.create(
-        {
+      const user = await User.create({
           username,
           email,
-          registration,
           photo,
-        },
-        trx
-      );
+        }, trx);
+
+      const empoyee = await Employee.create({ 
+        user_id: user.id,
+        registration,
+      }, trx); 
 
       const confirmation_token = Math.random().toString(36).slice(5);
 
@@ -41,7 +42,7 @@ class EmployeeController {
 
       trx.commit();
 
-      return response.status(200).json({ user });
+      return response.status(200).json({ user, empoyee });
     } catch (err) {
       trx.rollback();
       console.log(err);
@@ -93,26 +94,42 @@ class EmployeeController {
   }
 
   async destroy({ params, request, response }) {
-    try {
-      const user = await User.findOrFail(params.id);
 
-      if (!user) {
+    const trx = Database.beginTransaction() 
+
+    try {
+      const employee = await Employee.findBy("user_id",params.id);
+
+      if (!employee) {
         return response.status(404).json({
           message: "user not found",
         });
       }
 
-      user.merge({
+      employee.merge({
         deleted_at: new Date(),
-      });
+      }, trx);
+
+      const user = await User.findOrFail(params.id);
+
+      user.merge({
+        deleted_at: new Date()
+      }, trx);
+
+      await employee.save();
 
       await user.save();
+
+      trx.commit(); 
 
       return response.status(200).json({
         message: "user deleted",
       });
+
     } catch (err) {
       console.log(err);
+
+      trx.rollback();
 
       return response.status(400).json({
         message: "error deleting user",
