@@ -8,7 +8,7 @@ const Access = use("App/Models/Access");
 
 class EmployeeController {
   async store({ request, response }) {
-    const { username, email, cpf, photo, registration } = request.all();
+    const { username, email, photo, registration } = request.all();
 
     const trx = await Database.beginTransaction();
 
