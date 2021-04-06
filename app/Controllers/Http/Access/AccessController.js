@@ -7,14 +7,8 @@
     
 class AccessController {
 
-    async initiateCheckin({request, response, auth}) {        
+    async initiateCheckin({request, response}) {        
         const { email } = request.all();
-        
-        if (!await auth.getUser()) {
-            return response.status(400).json({
-                message: "user not logged in"
-            })
-        }
 
         try {
 
@@ -70,7 +64,7 @@ class AccessController {
     } 
 
 
-    async checkin({request, response, auth}) {
+    async checkin({request, response}) {
         
         try {
             const { code } = request.all(); 
@@ -123,13 +117,7 @@ class AccessController {
     }
     
     async initiateCheckout({response, request}) {
-        const { email } = request.all(); 
-
-        if (!await auth.getUser()) {
-            return response.status(400).json({
-                message: "user not logged in"
-            })
-        }
+        const { email } = request.all();
 
         try {
 
