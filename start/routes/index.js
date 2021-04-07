@@ -24,3 +24,4 @@ Route.get('/', () => {
 require("./Auth")
 require("./Access")
 require("./Employee")
+require("./Visitant")
