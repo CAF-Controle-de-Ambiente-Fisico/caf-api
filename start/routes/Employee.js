@@ -6,7 +6,7 @@ Route.group(() => {
     Route.get('/employee', "EmployeeController.show")
     Route.put('/employee', "EmployeeController.update")
     Route.delete('/employee', "EmployeeController.destroy")
-    Route.post('/confirmation', "EmployeeController.passwordConfirmation")
+    Route.post('/employee/confirmation', "EmployeeController.passwordConfirmation")
   })
   .prefix("v1")
   .namespace("Employee")  

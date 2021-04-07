@@ -4,9 +4,11 @@ const Hash = use("App/Models/Hash");
 const sendEmail = use("./../../../helpers/sendEmail");
 const Database = use("Database");
 const User = use("App/Models/User");
-const Visitant = use("App/Models/Visitant")
+const Visitant = use("App/Models/Visitant");
+const Access = use('App/Models/Access')
 
 class VisitantController {
+
   async store({ request, response }) {
     const { username, email, photo, cpf } = request.all();
 
@@ -39,6 +41,7 @@ class VisitantController {
         code: confirmation_token,
         email: user.email,
         username: user.username,
+        role: 'visitant'
       });
 
       trx.commit();
@@ -164,13 +167,23 @@ class VisitantController {
 
       await hash.delete(trx);
 
-        Access.create({
-          user_id: user.id,
-          code,
-          is_active: true,
-          photo: user.photo
+      
+      const code = Math.random().toString(36).slice(5);
+      // let access = await Access.findBy('code', code)
+      
+      // while(!access) {
+      //   code = Math.random().toString(36).slice(5);
+      //   access = await Access.findBy('code', code)
+      // }
+
+      const access = await Access.create({
+        user_id: user.id,
+        code,
+        is_active: true,
       }, trx);
 
+      access.save();
+      
       trx.commit()
 
       return response.status(200).json({

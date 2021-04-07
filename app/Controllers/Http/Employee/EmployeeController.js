@@ -8,6 +8,7 @@ const Employee = use("App/Models/Employee")
 const Access = use("App/Models/Access")
 
 class EmployeeController {
+
   async store({ request, response }) {
     const { username, email, photo, registration } = request.all();
 
@@ -39,6 +40,7 @@ class EmployeeController {
         code: confirmation_token,
         email: user.email,
         username: user.username,
+        role: 'employee'
       });
 
       trx.commit();
@@ -162,12 +164,21 @@ class EmployeeController {
 
       await hash.delete(trx);
 
-        Access.create({
-          user_id: user.id,
-          code,
-          is_active: true,
-          photo: user.photo
+      const code = Math.random().toString(36).slice(5);
+      // let access = await Access.findBy('code', code)
+      
+      // while(!access) {
+      //   code = Math.random().toString(36).slice(5);
+      //   access = await Access.findBy('code', code)
+      // }
+
+      const access = await Access.create({
+        user_id: user.id,
+        code,
+        is_active: true,
       }, trx);
+
+      access.save();
 
       trx.commit()
 
