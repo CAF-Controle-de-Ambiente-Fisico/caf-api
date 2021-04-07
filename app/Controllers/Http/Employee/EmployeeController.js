@@ -179,7 +179,7 @@ class EmployeeController {
 
       trx.rollback()
 
-      return response.status(200).json({
+      return response.status(400).json({
         message: "error confirmating password",
       });
     }

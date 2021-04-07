@@ -36,15 +36,6 @@ class AccessController {
                 })
             }
             
-            const code = Math.random().toString(36).slice(5);
-            
-            Access.create({
-                user_id: user.id,
-                code,
-                is_active: true,
-                photo: user.photo
-            });
-            
             const userData = {
                 username: user.username, 
                 photo: user.photo
