@@ -47,10 +47,10 @@ class AccessController {
             
             const userData = {
                 username: user.username, 
-                photo: user.photo 
+                photo: user.photo
             }
 
-            return response.status(200).json({userData});
+            return response.status(200).json({userData, code});
 
         } catch (err) {
             return response.status(400).json({
@@ -73,8 +73,6 @@ class AccessController {
                     message: "access code is required"
                 })
             }
-    
-            const user = await auth.getUser();
 
             const access = await Access.query()
             .where("user_id", user.id)
@@ -102,8 +100,6 @@ class AccessController {
             });
     
             await access.save();
-
-            await sendEmail({ username: user.username, email: user.email, code: access.alphanumeric })
 
             return response.status(200).json({ access })
     
