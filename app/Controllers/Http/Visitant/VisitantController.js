@@ -164,6 +164,13 @@ class VisitantController {
 
       await hash.delete(trx);
 
+        Access.create({
+          user_id: user.id,
+          code,
+          is_active: true,
+          photo: user.photo
+      }, trx);
+
       trx.commit()
 
       return response.status(200).json({

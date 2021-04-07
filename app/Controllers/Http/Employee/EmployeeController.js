@@ -5,6 +5,7 @@ const sendEmail = use("./../../../helpers/sendEmail");
 const Database = use("Database");
 const User = use("App/Models/User");
 const Employee = use("App/Models/Employee")
+const Access = use("App/Models/Access")
 
 class EmployeeController {
   async store({ request, response }) {
@@ -160,6 +161,13 @@ class EmployeeController {
       await user.save(trx);
 
       await hash.delete(trx);
+
+        Access.create({
+          user_id: user.id,
+          code,
+          is_active: true,
+          photo: user.photo
+      }, trx);
 
       trx.commit()
 
