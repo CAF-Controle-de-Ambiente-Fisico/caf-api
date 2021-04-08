@@ -4,27 +4,32 @@ const Hash = use("App/Models/Hash");
 const sendEmail = use("./../../../helpers/sendEmail");
 const Database = use("Database");
 const User = use("App/Models/User");
-const Employee = use("App/Models/Employee")
-const Access = use("App/Models/Access")
+const Employee = use("App/Models/Employee");
+const Access = use("App/Models/Access");
 
 class EmployeeController {
-
   async store({ request, response }) {
     const { username, email, photo, registration } = request.all();
 
     const trx = await Database.beginTransaction();
 
     try {
-      const user = await User.create({
+      const user = await User.create(
+        {
           username,
           email,
           photo,
-        }, trx);
+        },
+        trx
+      );
 
-      const empoyee = await Employee.create({ 
-        user_id: user.id,
-        registration,
-      }, trx); 
+      const empoyee = await Employee.create(
+        {
+          user_id: user.id,
+          registration,
+        },
+        trx
+      );
 
       const confirmation_token = Math.random().toString(36).slice(5);
 
@@ -40,7 +45,7 @@ class EmployeeController {
         code: confirmation_token,
         email: user.email,
         username: user.username,
-        role: 'employee'
+        role: "employee",
       });
 
       trx.commit();
@@ -57,12 +62,12 @@ class EmployeeController {
 
   async show({ params, request, response, view }) {
     try {
-      const user = await User.findOrFail(params.id);
+      const user = await User.findOrFail(request.email);
 
       return response.status(200).json(user);
     } catch (err) {
-      return response.status(404).json({
-        message: "error showing user",
+      return response.status(400).json({
+        message: "User doesn't exist",
       });
     }
   }
@@ -96,12 +101,12 @@ class EmployeeController {
     }
   }
 
+  //add table sofDelete
   async destroy({ params, request, response }) {
-
-    const trx = Database.beginTransaction() 
+    const trx = Database.beginTransaction();
 
     try {
-      const employee = await Employee.findBy("user_id",params.id);
+      const employee = await Employee.findBy("user_id", params.id);
 
       if (!employee) {
         return response.status(404).json({
@@ -109,26 +114,31 @@ class EmployeeController {
         });
       }
 
-      employee.merge({
-        deleted_at: new Date(),
-      }, trx);
+      employee.merge(
+        {
+          deleted_at: new Date(),
+        },
+        trx
+      );
 
       const user = await User.findOrFail(params.id);
 
-      user.merge({
-        deleted_at: new Date()
-      }, trx);
+      user.merge(
+        {
+          deleted_at: new Date(),
+        },
+        trx
+      );
 
       await employee.save();
 
       await user.save();
 
-      trx.commit(); 
+      trx.commit();
 
       return response.status(200).json({
         message: "user deleted",
       });
-
     } catch (err) {
       console.log(err);
 
@@ -143,7 +153,7 @@ class EmployeeController {
   async passwordConfirmation({ request, response }) {
     const { password, confirm_password, token } = request.all();
 
-    const trx = await Database.beginTransaction()
+    const trx = await Database.beginTransaction();
 
     try {
       if (password != confirm_password) {
@@ -166,21 +176,24 @@ class EmployeeController {
 
       const code = Math.random().toString(36).slice(5);
       // let access = await Access.findBy('code', code)
-      
+
       // while(!access) {
       //   code = Math.random().toString(36).slice(5);
       //   access = await Access.findBy('code', code)
       // }
 
-      const access = await Access.create({
-        user_id: user.id,
-        code,
-        is_active: true,
-      }, trx);
+      const access = await Access.create(
+        {
+          user_id: user.id,
+          code,
+          is_active: true,
+        },
+        trx
+      );
 
       access.save();
 
-      trx.commit()
+      trx.commit();
 
       return response.status(200).json({
         message: "password confirmed",
@@ -188,7 +201,7 @@ class EmployeeController {
     } catch (err) {
       console.log(err);
 
-      trx.rollback()
+      trx.rollback();
 
       return response.status(400).json({
         message: "error confirmating password",
