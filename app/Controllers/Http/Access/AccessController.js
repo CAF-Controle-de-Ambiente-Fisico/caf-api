@@ -1,179 +1,141 @@
-'use strict'
+"use strict";
 
-    const Access = use("App/Models/Access");
-    const sendEmail = use("./../../../helpers/sendEmail");
-    const User = use("App/Models/User");
-    
+const Access = use("App/Models/Access");
+const sendEmail = use("./../../../helpers/sendEmail");
+const User = use("App/Models/User");
+
 class AccessController {
+  async checkin({ request, response }) {
+    try {
+      const { code, email } = request.all();
 
-    async initiateCheckin({request, response}) {        
-        const { email } = request.all();
+      if (!email) {
+        return response.status(400).json({
+          message: "email is required",
+        });
+      }
 
-        try {
+      const user = await User.query().where("email", email).first();
 
-            const user = await User.findBy("email", email);
+      if (!user) {
+        return response.status(400).json({
+          message: "Usuário não cadastrado",
+        });
+      }
 
-            if (!user) {
-                return response.status(404).json({
-                    message: "user not found"
-                })
-            } 
-            
-            const access = await Access.query()
-            .where("user_id", user.id)
-            .where("is_active", true)
-            .first()
+      if (!code) {
+        return response.status(400).json({
+          message: "access code is required",
+        });
+      }
 
-            if (access) {
-                return response.status(400).json({
-                    message: "user already have an active access, please checkout"
-                })
-            }
-    
-            if (!user){
-                return response.status(404).json({
-                    message: "user not found"
-                })
-            }
-            
-            const userData = {
-                username: user.username, 
-                photo: user.photo
-            }
+      const access = await Access.query()
+        .where("user_id", user.id)
+        .where("code", code)
+        .where("is_active", true)
+        .whereNull("checkin")
+        .first();
 
-            return response.status(200).json({userData, code});
+      if (!access) {
+        return response.status(400).json({
+          message: "user has no active checkin",
+        });
+      }
 
-        } catch (err) {
-            return response.status(400).json({
-                message: "error initiating checkin"
-            })
-        }
-        
-        
+      // const alphanumeric = Math.random().toString(36).slice(5);
 
-    } 
+      access.merge({
+        checkin: new Date(),
+      });
 
+      await access.save();
 
-    async checkin({request, response}) {
-        
-        try {
-            const { code } = request.all(); 
-    
-            if (!code) {
-                return response.status(400).json({
-                    message: "access code is required"
-                })
-            }
-
-            const access = await Access.query()
-            .where("user_id", user.id)
-            .where("code", code)
-            .where("is_active", false)
-            .first()
-
-            if (access) {
-                return response.status(400).json({
-                    message: "user has no active checkin"
-                })
-            }
-
-            if (!user.email) {
-                return response.status(400).json({
-                    message: "email is required"
-                })
-            }
-    
-            const alphanumeric = Math.random().toString(36).slice(5);
-            
-            access.merge({
-                alphanumeric,
-                checkin: new Date(),
-            });
-    
-            await access.save();
-
-            return response.status(200).json({ access })
-    
-        } catch (err) {
-            console.log(err)
-            return response.status(400).json({
-                message: "checkin can't be done"
-            })
-        }
+      return response.status(200).json(access);
+    } catch (err) {
+      console.log(err);
+      return response.status(400).json({
+        message: "checkin can't be done",
+      });
     }
-    
-    async initiateCheckout({response, request}) {
-        const { email } = request.all();
+  }
 
-        try {
+  async checkout({ response, request }) {
+    const trx = await Database.beginTransaction();
 
-            const user = await User.findBy("email", email);
+    try {
+      const { code, email } = request.all();
 
-            if (!user) {
-                return response.status(404).json({
-                    message: "user not found"
-                })
-            } 
-            
-            const access = await Access.query()
-            .where("user_id", user.id)
-            .where("is_active", true)
-            .whereNotNull("checkin")
-            .first()
+      if (!email) {
+        return response.status(400).json({
+          message: "email is required",
+        });
+      }
 
-            if (!access) {
-                return response.status(404).json({
-                    message: "you need to have a checkin active to make a checkout!"
-                })
-            }
+      const user = await User.query().where("email", email).first();
 
-            const userData = {
-                username: user.username, 
-                photo: user.photo 
-            }
+      if (!user) {
+        return response.status(400).json({
+          message: "Usuário não cadastrado",
+        });
+      }
 
-            return response.status(200).json({ userData })
+      if (!code) {
+        return response.status(400).json({
+          message: "access code is required",
+        });
+      }
 
-        } catch (err) {
-            return response.status(400).json({
-                message: "error initiating checkout"
-            })
-        }
+      const access = await Access.query()
+        .where("user_id", user.id)
+        .where("code", code)
+        .where("is_active", true)
+        .whereNotNull("checkin")
+        .first();
+
+      if (!access) {
+        return response.status(400).json({
+          message: "access not found",
+        });
+      }
+
+      // const alphanumeric = Math.random().toString(36).slice(5);
+
+      access.merge({
+        checkout: new Date(),
+        code: null,
+        is_active: false,
+      });
+
+      await access.save();
+
+      const newCode = Math.random().toString(36).slice(5);
+      // let access = await Access.findBy('code', code)
+
+      // while(!access) {
+      //   code = Math.random().toString(36).slice(5);
+      //   access = await Access.findBy('code', code)
+      // }
+
+      const newAccess = await Access.create(
+        {
+          user_id: user.id,
+          code: newCode,
+          is_active: true,
+        },
+        trx
+      );
+
+      newAccess.save();
+
+      trx.commit();
+
+      return response.status(200).json(newAccess);
+    } catch (err) {
+      console.log(err);
+      return response.status(400).json({
+        message: "checkin can't be done",
+      });
     }
-    
-    async checkout({response, request}) {
-
-        const { code } = request.all(); 
-        
-        try {
-
-        if (!code) {
-            return response.status(400).json({
-                message: "access code is required"
-            })
-        }
-
-        const access = Access.merge({
-            checkout: new Date(),
-            is_active: false 
-        })
-
-        await access.save()
-
-        return response.status(200).json({
-            message: "checkout done"
-        })
-
-
-        } catch (err) {
-
-            return response.status(400).json({
-                message: "checkout can't be done"
-            })
-            
-        }
-
-    }
-
+  }
 }
-    module.exports = AccessController
+module.exports = AccessController;
