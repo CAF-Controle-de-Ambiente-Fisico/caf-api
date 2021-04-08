@@ -5,27 +5,31 @@ const sendEmail = use("./../../../helpers/sendEmail");
 const Database = use("Database");
 const User = use("App/Models/User");
 const Visitant = use("App/Models/Visitant");
-const Access = use('App/Models/Access')
+const Access = use("App/Models/Access");
 
 class VisitantController {
-
   async store({ request, response }) {
     const { username, email, photo, cpf } = request.all();
 
     const trx = await Database.beginTransaction();
 
     try {
-
-      const user = await User.create({
+      const user = await User.create(
+        {
           username,
           email,
           photo,
-        }, trx);
+        },
+        trx
+      );
 
-      const visitant = await Visitant.create({ 
-        user_id: user.id,
-        cpf,
-      }, trx); 
+      const visitant = await Visitant.create(
+        {
+          user_id: user.id,
+          cpf,
+        },
+        trx
+      );
 
       const confirmation_token = Math.random().toString(36).slice(5);
 
@@ -41,7 +45,7 @@ class VisitantController {
         code: confirmation_token,
         email: user.email,
         username: user.username,
-        role: 'visitant'
+        role: "visitant",
       });
 
       trx.commit();
@@ -100,11 +104,10 @@ class VisitantController {
   }
 
   async destroy({ params, request, response }) {
-
-    const trx = Database.beginTransaction() 
+    const trx = Database.beginTransaction();
 
     try {
-      const visitant = await Visitant.findBy("user_id",params.id);
+      const visitant = await Visitant.findBy("user_id", params.id);
 
       if (!visitant) {
         return response.status(404).json({
@@ -112,26 +115,31 @@ class VisitantController {
         });
       }
 
-      visitant.merge({
-        deleted_at: new Date(),
-      }, trx);
+      visitant.merge(
+        {
+          deleted_at: new Date(),
+        },
+        trx
+      );
 
       const user = await User.findOrFail(params.id);
 
-      user.merge({
-        deleted_at: new Date()
-      }, trx);
+      user.merge(
+        {
+          deleted_at: new Date(),
+        },
+        trx
+      );
 
       await visitant.save();
 
       await user.save();
 
-      trx.commit(); 
+      trx.commit();
 
       return response.status(200).json({
         message: "user deleted",
       });
-
     } catch (err) {
       console.log(err);
 
@@ -146,7 +154,7 @@ class VisitantController {
   async passwordConfirmation({ request, response }) {
     const { password, confirm_password, token } = request.all();
 
-    const trx = await Database.beginTransaction()
+    const trx = await Database.beginTransaction();
 
     try {
       if (password != confirm_password) {
@@ -167,24 +175,26 @@ class VisitantController {
 
       await hash.delete(trx);
 
-      
       const code = Math.random().toString(36).slice(5);
       // let access = await Access.findBy('code', code)
-      
+
       // while(!access) {
       //   code = Math.random().toString(36).slice(5);
       //   access = await Access.findBy('code', code)
       // }
 
-      const access = await Access.create({
-        user_id: user.id,
-        code,
-        is_active: true,
-      }, trx);
+      const access = await Access.create(
+        {
+          user_id: user.id,
+          code,
+          is_active: true,
+        },
+        trx
+      );
 
       access.save();
-      
-      trx.commit()
+
+      trx.commit();
 
       return response.status(200).json({
         message: "password confirmed",
@@ -192,7 +202,7 @@ class VisitantController {
     } catch (err) {
       console.log(err);
 
-      trx.rollback()
+      trx.rollback();
 
       return response.status(400).json({
         message: "error confirmating password",
