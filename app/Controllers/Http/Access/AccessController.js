@@ -3,6 +3,7 @@
 const Access = use("App/Models/Access");
 const sendEmail = use("./../../../helpers/sendEmail");
 const User = use("App/Models/User");
+const Database = use("Database");
 
 class AccessController {
   async checkin({ request, response }) {
@@ -102,7 +103,7 @@ class AccessController {
 
       access.merge({
         checkout: new Date(),
-        code: null,
+        code: 0,
         is_active: false,
       });
 
