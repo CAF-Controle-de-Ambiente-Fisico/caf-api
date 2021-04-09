@@ -2,6 +2,7 @@
 
 const Hash = use("App/Models/Hash");
 const sendEmail = use("./../../../helpers/sendEmail");
+const sendCodeAccess = use("./../../../helpers/sendCodeAccess");
 const Database = use("Database");
 const User = use("App/Models/User");
 const Employee = use("App/Models/Employee");
@@ -192,6 +193,15 @@ class EmployeeController {
       );
 
       access.save();
+
+      //Fazer Email personalizado para cada role
+
+      await sendCodeAccess({
+        code,
+        email: user.email,
+        username: user.username,
+        role: "employee",
+      });
 
       trx.commit();
 
