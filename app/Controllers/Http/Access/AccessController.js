@@ -1,7 +1,7 @@
 "use strict";
 
 const Access = use("App/Models/Access");
-const sendEmail = use("./../../../helpers/sendEmail");
+const sendCodeAccess = use("./../../../helpers/sendCodeAccess");
 const User = use("App/Models/User");
 const Database = use("Database");
 
@@ -10,6 +10,7 @@ class AccessController {
     try {
       const { code, email } = request.all();
 
+      // block usage case
       if (!email) {
         return response.status(400).json({
           message: "email is required",
@@ -42,8 +43,7 @@ class AccessController {
           message: "user has no active checkin",
         });
       }
-
-      // const alphanumeric = Math.random().toString(36).slice(5);
+      // end block usage case
 
       access.merge({
         checkin: new Date(),
@@ -66,6 +66,7 @@ class AccessController {
     try {
       const { code, email } = request.all();
 
+      // block usage case
       if (!email) {
         return response.status(400).json({
           message: "email is required",
@@ -125,6 +126,15 @@ class AccessController {
         },
         trx
       );
+
+      await sendCodeAccess({
+        code,
+        email: user.email,
+        username: user.username,
+        role: "employee",
+      });
+
+      // block usage case
 
       newAccess.save();
 
