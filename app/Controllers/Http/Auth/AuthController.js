@@ -1,6 +1,7 @@
 "use strict";
 
 const User = use("App/Models/User");
+const Access = use("App/Models/Access");
 
 class AuthController {
   async auth({ request, response, auth }) {
@@ -15,10 +16,13 @@ class AuthController {
 
       const user = await User.findBy("email", email);
 
+      const access = await Access.findBy("user_id", user.id);
+
       return response.status(200).json({
         message: "user logged",
         token,
         user,
+        access,
       });
     } catch (err) {
       return response.status(404).json({
