@@ -2,6 +2,7 @@
 
 const Hash = use("App/Models/Hash");
 const sendEmail = use("./../../../helpers/sendEmail");
+const sendCodeAccess = use("./../../../helpers/sendCodeAccess");
 const Database = use("Database");
 const User = use("App/Models/User");
 const Visitant = use("App/Models/Visitant");
@@ -193,6 +194,16 @@ class VisitantController {
       );
 
       access.save();
+
+      //Fazer Email personalizado para cada role
+
+      await sendCodeAccess({
+        code,
+        email: user.email,
+        username: user.username,
+        role: "visitant",
+      });
+
 
       trx.commit();
 
