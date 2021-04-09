@@ -10,7 +10,9 @@ const sendEmail = async (data) => {
         from: "caf.trt21@gmail.com", 
         subject: "Confirmação de Senha",
         text: `Link para confirmação de senha`,
-        html: `<h1>olá ${data.username} esse é seu link de confirmação de senha: https://caf-web-git-master-caf-controle-de-ambiente-fisico.vercel.app/signup/confirmation?token=${data.code}&role=${data.role}</h1>`    };
+        html: `<h1>Olá ${data.username}</h1> 
+            <p>Clique no link abaixo para o próximo passo do seu cadastro:</p> 
+            <a href='http://localhost:3000/signup/confirmation?token=${data.code}&role=${data.role}'> Seguir com meu cadastro </a>`};
     sgMail
     .send(msg)
     .then(() => {   
