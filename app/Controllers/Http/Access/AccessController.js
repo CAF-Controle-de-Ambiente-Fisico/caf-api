@@ -147,5 +147,23 @@ class AccessController {
       });
     }
   }
+
+  async getCode({params, request, response}) {
+    try {
+      const userId = params.id;
+
+      const access = await Access.query()
+        .where("user_id", userId)
+        .where("is_active", true)
+        .first();
+
+      return response.status(200).json({access});
+    } catch (err) {
+      console.log(err);
+      return response.status(400).json({
+        message: "Usuário não encontrado",
+      });
+    }
+  }
 }
 module.exports = AccessController;
