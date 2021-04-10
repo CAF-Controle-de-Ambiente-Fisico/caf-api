@@ -104,7 +104,6 @@ class AccessController {
 
       access.merge({
         checkout: new Date(),
-        code: 0,
         is_active: false,
       });
 
@@ -128,7 +127,7 @@ class AccessController {
       );
 
       await sendCodeAccess({
-        code,
+        code: newCode,
         email: user.email,
         username: user.username,
         role: "employee",

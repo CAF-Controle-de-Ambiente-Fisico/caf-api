@@ -16,7 +16,7 @@ class AuthController {
 
       const user = await User.findBy("email", email);
 
-      const access = await Access.findBy("user_id", user.id);
+      const access = await Access.query("user_id", user.id).where('is_active', true).first();
 
       return response.status(200).json({
         message: "user logged",
