@@ -7,9 +7,9 @@ const Database = use("Database");
 const User = use("App/Models/User");
 const Visitant = use("App/Models/Visitant");
 const Access = use("App/Models/Access");
-
+const VisitantTransformer = use ("./../../../Transformers/VisitantTransformer")
 class VisitantController {
-  async store({ request, response }) {
+  async store({ request, response, transform }) {
     const { username, email, photo, cpf } = request.all();
 
     const trx = await Database.beginTransaction();
@@ -51,7 +51,7 @@ class VisitantController {
 
       trx.commit();
 
-      return response.status(200).json({ user, visitant });
+      return transform.item(visitant, VisitantTransformer);
     } catch (err) {
       trx.rollback();
 

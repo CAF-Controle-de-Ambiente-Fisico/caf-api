@@ -7,16 +7,16 @@ const Database = use("Database");
 const User = use("App/Models/User");
 const Employee = use("App/Models/Employee");
 const Access = use("App/Models/Access");
+const EmployeeTransformer = use ("./../../../Transformers/EmployeeTransformer")
 
 class EmployeeController {
-  async store({ request, response }) {
+  async store({ request, response, transform }) {
     const { username, email, photo, registration } = request.all();
 
     const trx = await Database.beginTransaction();
 
     try {
-      const user = await User.create(
-        {
+      const user = await User.create({
           username,
           email,
           photo,
@@ -24,8 +24,7 @@ class EmployeeController {
         trx
       );
 
-      const empoyee = await Employee.create(
-        {
+      const empoyee = await Employee.create({
           user_id: user.id,
           registration,
         },
@@ -51,7 +50,7 @@ class EmployeeController {
 
       trx.commit();
 
-      return response.status(200).json({ user, empoyee });
+      return transform.item(empoyee, EmployeeTransformer);
     } catch (err) {
       trx.rollback();
       console.log(err);

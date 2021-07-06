@@ -32,11 +32,11 @@ class AccessController {
       }
 
       const access = await Access.query()
-        .where("user_id", user.id)
-        .where("code", code)
-        .where("is_active", true)
-        .whereNull("checkin")
-        .first();
+      .where("user_id", user.id)
+      .where("code", code)
+      .where("is_active", true)
+      .whereNull("checkin")
+      .first();
 
       if (!access) {
         return response.status(400).json({
